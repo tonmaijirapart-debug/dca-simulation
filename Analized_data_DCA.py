@@ -5,39 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 
-# --- 0. Page Configuration & Styling ---
+# --- 0. Page Configuration ---
 st.set_page_config(
     page_title="DCA Rolling Window Analysis",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-st.markdown("""
-    <style>
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-    div[data-testid="stMetric"] {
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        padding: 16px 20px;
-        border-radius: 6px;
-    }
-    div[data-testid="stMetricLabel"] > div {
-        font-size: 0.85rem;
-        color: #495057;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-    }
-    div[data-testid="stMetricValue"] > div {
-        font-size: 1.6rem;
-        font-weight: 600;
-        color: #212529;
-    }
-    </style>
-""", unsafe_allow_html=True)
 
 st.title("Dollar-Cost Averaging (DCA) Historical Simulation")
 st.caption("Rolling-window backtest evaluating annualized effective returns and terminal portfolio values across historical market cycles.")
@@ -163,96 +136,71 @@ df_results = pd.DataFrame(results)
 if not df_results.empty:
     total_principal = investment_per_month * months_duration
     mean_fv = df_results['Final_Value'].mean()
-    median_fv = df_results['Final_Value'].median()
     mean_return = df_results['Annual_Return_Pct'].mean()
     win_rate = (df_results['Final_Value'] >= total_principal).mean() * 100
     multiple = mean_fv / total_principal
 
-    st.sidebar.markdown("---")
+    st.sidebar.divider()
     st.sidebar.caption(
         f"**Dataset Range:** {data.index[0].strftime('%Y-%m')} to {data.index[-1].strftime('%Y-%m')}  \n"
         f"**Rolling Windows:** {len(df_results):,} paths"
     )
 
-    # Top KPI Row
+    # Top KPI Row (native Streamlit containers adapt automatically to Dark & Light mode)
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Total Principal Invested", f"${total_principal:,.0f}")
-    m2.metric("Mean Terminal Value", f"${mean_fv:,.0f}", f"{multiple:.2f}x Principal")
-    m3.metric("Mean Annualized Return", f"{mean_return:.2f}%")
-    m4.metric("Positive Return Frequency", f"{win_rate:.1f}%", f"{len(df_results):,} Rolling Periods")
+    with m1.container(border=True):
+        st.metric("Total Principal Invested", f"${total_principal:,.0f}")
+    with m2.container(border=True):
+        st.metric("Mean Terminal Value", f"${mean_fv:,.0f}", f"{multiple:.2f}x Principal")
+    with m3.container(border=True):
+        st.metric("Mean Annualized Return", f"{mean_return:.2f}%")
+    with m4.container(border=True):
+        st.metric("Positive Return Frequency", f"{win_rate:.1f}%", f"{len(df_results):,} Rolling Periods")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.divider()
 
-    # Charts Row
+    # Charts Row (Classic raw Matplotlib style)
     col1, col2 = st.columns(2)
-
-    plt.rcParams['font.sans-serif'] = 'DejaVu Sans'
-    plt.rcParams['axes.edgecolor'] = '#cccccc'
-    plt.rcParams['axes.linewidth'] = 0.8
 
     # Chart 1: Annualized Return Distribution
     with col1:
-        st.markdown("##### Distribution of Annualized Returns (%)")
-        fig1, ax1 = plt.subplots(figsize=(8, 4.8), dpi=120)
-        ax1.hist(
-            df_results['Annual_Return_Pct'],
-            bins=45,
-            color='#2e6b5e',
-            edgecolor='white',
-            linewidth=0.6,
-            alpha=0.85
-        )
-        ax1.axvline(mean_return, color='#b22222', linestyle='--', linewidth=1.5, label=f'Mean: {mean_return:.2f}%')
+        st.subheader("Distribution of Annualized Returns (%)")
+        fig1, ax1 = plt.subplots(figsize=(10, 6))
+        ax1.hist(df_results['Annual_Return_Pct'], bins=50, color='lightgreen', edgecolor='black', alpha=0.7)
+        ax1.axvline(mean_return, color='red', linestyle='dashed', linewidth=1, label=f'Mean: {mean_return:.2f}%')
         ax1.set_title(
-            f'{asset_name} | {years_duration}-Year Rolling DCA ({data.index[0].strftime("%Y-%m")} – {data.index[-1].strftime("%Y-%m")})',
-            fontsize=10,
-            color='#495057',
-            pad=12
+            f'Distribution of Annualized Returns (DCA {years_duration} Years in {asset_name})\n'
+            f'Start Years: {data.index[0].strftime("%Y-%m")} to {data.index[-1].strftime("%Y-%m")}'
         )
-        ax1.set_xlabel('Annualized Effective Return (%)', fontsize=9, labelpad=8)
-        ax1.set_ylabel('Frequency (Rolling Periods)', fontsize=9, labelpad=8)
-        ax1.spines['top'].set_visible(False)
-        ax1.spines['right'].set_visible(False)
-        ax1.grid(axis='y', linestyle=':', alpha=0.5)
-        ax1.legend(frameon=True, facecolor='white', edgecolor='#e9ecef', fontsize=9)
-        fig1.tight_layout()
+        ax1.set_xlabel('Annual Effective Return (%)')
+        ax1.set_ylabel('Frequency')
+        ax1.legend()
+        ax1.grid(True, alpha=0.3)
         st.pyplot(fig1)
 
     # Chart 2: Final Portfolio Value Distribution
     with col2:
-        st.markdown("##### Distribution of Terminal Portfolio Value ($)")
-        fig2, ax2 = plt.subplots(figsize=(8, 4.8), dpi=120)
-        ax2.hist(
-            df_results['Final_Value'],
-            bins=45,
-            color='#2b5c8f',
-            edgecolor='white',
-            linewidth=0.6,
-            alpha=0.85
-        )
-        ax2.axvline(total_principal, color='#212529', linestyle='-', linewidth=1.5, label=f'Principal: ${total_principal:,.0f}')
-        ax2.axvline(mean_fv, color='#b22222', linestyle='--', linewidth=1.5, label=f'Mean FV: ${mean_fv:,.0f}')
+        st.subheader("Distribution of Final Value ($)")
+        fig2, ax2 = plt.subplots(figsize=(10, 6))
+        ax2.hist(df_results['Final_Value'], bins=50, color='skyblue', edgecolor='black', alpha=0.7)
+        ax2.axvline(total_principal, color='black', linestyle='solid', linewidth=1, label=f'Principal: ${total_principal:,.0f}')
+        ax2.axvline(mean_fv, color='red', linestyle='dashed', linewidth=1, label=f'Mean FV: ${mean_fv:,.2f}')
         ax2.xaxis.set_major_formatter(
             lambda x, pos: f'${x/1e6:.1f}M' if mean_fv >= 1e6 else f'${x/1e3:,.0f}K'
         )
         ax2.set_title(
-            f'${investment_per_month:,}/Month Contribution | {years_duration}-Year Horizon',
-            fontsize=10,
-            color='#495057',
-            pad=12
+            f'Distribution of Final Value (DCA ${investment_per_month:,}/mo, {years_duration} Years in {asset_name})\n'
+            f'Start Years: {data.index[0].strftime("%Y-%m")} to {data.index[-1].strftime("%Y-%m")}'
         )
-        ax2.set_xlabel('Terminal Portfolio Value ($)', fontsize=9, labelpad=8)
-        ax2.set_ylabel('Frequency (Rolling Periods)', fontsize=9, labelpad=8)
-        ax2.spines['top'].set_visible(False)
-        ax2.spines['right'].set_visible(False)
-        ax2.grid(axis='y', linestyle=':', alpha=0.5)
-        ax2.legend(frameon=True, facecolor='white', edgecolor='#e9ecef', fontsize=9)
-        fig2.tight_layout()
+        ax2.set_xlabel('Final Value ($)')
+        ax2.set_ylabel('Frequency')
+        ax2.legend()
+        ax2.grid(True, alpha=0.3)
         st.pyplot(fig2)
 
     # Summary Statistics Table
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("##### Summary Statistics & Percentiles")
+    st.divider()
+    st.subheader("Summary Statistics & Percentiles")
 
     percentiles = [0.1, 0.25, 0.5, 0.75, 0.9]
     stats_ret = df_results['Annual_Return_Pct'].describe(percentiles=percentiles)
@@ -273,17 +221,17 @@ if not df_results.empty:
         ],
         'Annualized Return (%)': [
             f"{stats_ret['count']:,.0f}",
-            f"{stats_ret['mean']:.4f}%",
-            f"{stats_ret['std']:.4f}%",
-            f"{stats_ret['min']:.4f}%",
-            f"{stats_ret['10%']:.4f}%",
-            f"{stats_ret['25%']:.4f}%",
-            f"{stats_ret['50%']:.4f}%",
-            f"{stats_ret['75%']:.4f}%",
-            f"{stats_ret['90%']:.4f}%",
-            f"{stats_ret['max']:.4f}%"
+            f"{stats_ret['mean']:.5f}%",
+            f"{stats_ret['std']:.5f}%",
+            f"{stats_ret['min']:.5f}%",
+            f"{stats_ret['10%']:.5f}%",
+            f"{stats_ret['25%']:.5f}%",
+            f"{stats_ret['50%']:.5f}%",
+            f"{stats_ret['75%']:.5f}%",
+            f"{stats_ret['90%']:.5f}%",
+            f"{stats_ret['max']:.5f}%"
         ],
-        'Terminal Portfolio Value ($)': [
+        'Final Value ($)': [
             f"{stats_fv['count']:,.0f}",
             f"${stats_fv['mean']:,.2f}",
             f"${stats_fv['std']:,.2f}",
