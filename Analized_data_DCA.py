@@ -212,11 +212,11 @@ if not df_results.empty:
             'Mean',
             'Standard Deviation',
             'Minimum',
-            '10th Percentile',
-            '25th Percentile',
-            '50th Percentile (Median)',
-            '75th Percentile',
-            '90th Percentile',
+            '10%',
+            '25%',
+            '50%',
+            '75%',
+            '90%',
             'Maximum'
         ],
         'Annualized Return (%)': [
