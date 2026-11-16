@@ -19,13 +19,37 @@ st.caption("Rolling-window backtest evaluating annualized effective returns and 
 st.sidebar.subheader("Simulation Parameters")
 
 asset_options = {
+    # --- Major Indices ---
     "S&P 500 Index (^GSPC)": "^GSPC",
     "Nasdaq 100 ETF (QQQ)": "QQQ",
-    "Gold Futures (GC=F)": "GC=F",
-    "Bitcoin (BTC-USD)": "BTC-USD",
+    "Dow Jones Industrial (^DJI)": "^DJI",
+    "Total World Stock ETF (VT)": "VT",
+    "Thailand SET Index (^SET.BK)": "^SET.BK",
+    
+    # --- US Mega Tech ---
+    "Nvidia (NVDA)": "NVDA",
     "Apple Inc. (AAPL)": "AAPL",
     "Microsoft Corp. (MSFT)": "MSFT",
-    "Custom Ticker": "CUSTOM"
+    "Tesla (TSLA)": "TSLA",
+    "Amazon (AMZN)": "AMZN",
+    "Alphabet / Google (GOOGL)": "GOOGL",
+    
+    # --- Dividend & Value ETF ---
+    "US Dividend Equity ETF (SCHD)": "SCHD",
+    "S&P 500 Low Volatility (SPLV)": "SPLV",
+    
+    # --- Thai Blue Chips ---
+    "PTT (PTT.BK)": "PTT.BK",
+    "CP ALL / 7-Eleven (CPALL.BK)": "CPALL.BK",
+    "AOT Airport of Thailand (AOT.BK)": "AOT.BK",
+    
+    # --- Commodities & Crypto ---
+    "Gold Futures (GC=F)": "GC=F",
+    "Bitcoin (BTC-USD)": "BTC-USD",
+    "Ethereum (ETH-USD)": "ETH-USD",
+    
+    # --- Custom Input ---
+    "Custom Ticker (Enter Symbol)": "CUSTOM"
 }
 
 selected_label = st.sidebar.selectbox("Asset", list(asset_options.keys()))
